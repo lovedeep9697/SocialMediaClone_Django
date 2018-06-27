@@ -10,6 +10,7 @@ from braces.views import SelectRelatedMixin
 from . import models 
 from . import forms
 from django.contrib.auth import get_user_model
+from django.contrib import messages
 
 User = get_user_model()
 # Create your views here.
@@ -30,7 +31,7 @@ class UserPosts(generic.ListView):
 
 	def get_queryset(self):
 		try:
-			self.post.user = User.objects.prefetch_related('posts').get(username__iexact=self.kwargs.get('username'))
+			self.post_user = User.objects.prefetch_related('posts').get(username__iexact=self.kwargs.get('username'))
 		except User.DoesNotExist:
 			raise Http404
 		else:
@@ -43,7 +44,7 @@ class UserPosts(generic.ListView):
 		return context
 
 
-class PostDetail(SelectRelatedMixin,generic,DetailView):
+class PostDetail(SelectRelatedMixin,generic.DetailView):
 	model = models.Post
 	select_related = ('user','group')
 
@@ -55,8 +56,9 @@ class PostDetail(SelectRelatedMixin,generic,DetailView):
 
 class CreatePost(LoginRequiredMixin,SelectRelatedMixin,generic.CreateView):
 
+	model = models.Post
 	fields = ('message','group')
-	models = models.Post
+	
 
 
 	def form_valid(self,form):

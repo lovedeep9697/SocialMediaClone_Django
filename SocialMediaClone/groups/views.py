@@ -2,24 +2,28 @@
 from __future__ import unicode_literals
 
 from django.shortcuts import render
-from django.contrib.auth import LoginRequiredMixin,PermissionRequiredMixin
-from djando.url import reverse
+from django.contrib.auth.mixins import LoginRequiredMixin,PermissionRequiredMixin
+from django.urls import reverse
 from django.views import generic
 from groups.models import Group,GroupMember
 from django.shortcuts import get_object_or_404
 from django.contrib import messages
+from django.db import IntegrityError
+from . import models
 # Create your views here.
 
 
 class CreateGroup(LoginRequiredMixin,generic.CreateView):
-	fields = ('name','description')
 	model = Group
+	fields = ('name','description')
+	
+
 
 class SingleGroup(generic.DetailView):
 	model = Group
 
 class ListGroups(generic.ListView):
-	models = Group
+	model = Group
 
 class JoinGroup(LoginRequiredMixin,generic.RedirectView):
 
@@ -34,7 +38,7 @@ class JoinGroup(LoginRequiredMixin,generic.RedirectView):
 		except IntegrityError:
 			messages.warning(self.request,'Warning, Already a member')
 		else:
-			messaged.success(self.request,'You are now a member')
+			messages.success(self.request,'You are now a member')
 
 		return super().get(request,*args,**kwargs)
 
@@ -53,7 +57,7 @@ class LeaveGroup(LoginRequiredMixin,generic.RedirectView):
 		try:
 			membership = models.GroupMember.objects.filter(
 				 user = self.request.user,
-				 group__slug = self.kqargs.get('slug')
+				 group__slug = self.kwargs.get('slug')
 
 				).get()
 
